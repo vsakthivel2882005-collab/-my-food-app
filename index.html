@@ -129,7 +129,28 @@ footer{text-align:center;padding:20px;color:#777}
 <button class="dark" onclick="loadAdminOrders()">Refresh All Orders</button>
 <div id="adminOrders">Loading...</div>
 </section>
+<!-- DELIVERY PARTNER DASHBOARD -->
+<section id="deliveryPanel" style="display:none; padding:15px;">
+  <h2>🚴 Delivery Partner Dashboard</h2>
 
+  <button onclick="loadDeliveryOrders()">
+    Refresh Orders
+  </button>
+
+  <div id="deliveryOrders">
+    <p>Assigned orders will appear here.</p>
+  </div>
+
+  <div id="gpsControls" style="display:none;">
+    <button onclick="startDeliveryGPS()">
+      Start GPS
+    </button>
+
+    <button onclick="stopDeliveryGPS()">
+      Stop GPS
+    </button>
+  </div>
+</section>
 </main>
 
 <footer>© My Food App | Fresh Food, Fast Delivery</footer>
