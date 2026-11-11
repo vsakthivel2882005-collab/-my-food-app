@@ -1,82 +1,124 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My Food App</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:#f6f6f6;color:#222}
-header{background:#e23744;color:white;padding:18px;text-align:center}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f6f8;color:#222}
+header{background:#e23744;color:white;padding:20px;text-align:center}
 header h1{margin:0}
-main{max-width:950px;margin:auto;padding:15px}
-.panel{background:white;padding:16px;border-radius:12px;margin:15px 0}
-input,button{padding:12px;border-radius:8px;border:1px solid #ddd;width:100%;margin:6px 0}
-button{background:#e23744;color:white;border:0;font-weight:bold;cursor:pointer}
-button.secondary{background:#333}
-.foods{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}
-.food{background:white;padding:12px;border-radius:12px}
-.food img{width:100%;height:110px;object-fit:cover;border-radius:8px}
-.food h3{margin:8px 0}
-.price{color:#e23744;font-weight:bold}
-.small{font-size:13px;color:#666}
-.row{display:flex;gap:8px;align-items:center}
-.row input{flex:1}
-.hidden{display:none}
-#message{padding:10px;color:#176b36}
+header p{margin:7px 0 0}
+main{max-width:1050px;margin:auto;padding:15px}
+.panel{background:white;padding:18px;border-radius:14px;margin:15px 0;box-shadow:0 2px 9px #0000000d}
+h2{margin-top:0}
+input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;margin:6px 0;font-size:15px}
+button{background:#e23744;color:white;border:0;padding:12px 15px;border-radius:8px;font-weight:bold;cursor:pointer;margin:5px 2px}
+button.dark{background:#333}
+button.green{background:#16834a}
+button.gray{background:#777}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1}
+.foods{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:13px}
+.food{background:white;border:1px solid #eee;border-radius:12px;padding:12px}
+.food img{width:100%;height:125px;object-fit:cover;border-radius:9px;background:#eee}
+.food h3{margin:9px 0}
+.price{font-weight:bold;color:#e23744}
+.small{font-size:13px;color:#777}
+.hidden{display:none!important}
+.order{border:1px solid #eee;padding:13px;border-radius:10px;margin:10px 0;overflow-wrap:anywhere}
+#message{color:#16733e;font-weight:bold}
+.admin-title{color:#e23744}
+footer{text-align:center;padding:20px;color:#777}
 </style>
 </head>
 <body>
+
 <header>
 <h1>🍔 My Food App</h1>
 <p>Fresh Food • Fast Delivery</p>
 </header>
 
 <main>
-<div class="panel">
-<h2>Customer Login</h2>
-<input id="email" type="email" placeholder="Email address">
+
+<!-- CUSTOMER LOGIN -->
+<section class="panel">
+<h2>👤 Customer Account</h2>
+<input id="email" type="email" placeholder="Email Address">
 <input id="password" type="password" placeholder="Password">
 <div class="row">
 <button onclick="login()">Login</button>
-<button class="secondary" onclick="signup()">Sign Up</button>
+<button class="dark" onclick="signup()">Sign Up</button>
+<button class="gray" onclick="logout()">Logout</button>
 </div>
-<button class="secondary" onclick="logout()">Logout</button>
 <p id="message"></p>
-</div>
+<p id="accountInfo" class="small">Please login or create an account.</p>
+</section>
 
-<div class="panel">
+<!-- FOOD MENU -->
+<section class="panel">
 <h2>🍽️ Food Menu</h2>
 <input id="search" placeholder="Search food..." oninput="showFoods()">
-<div id="foods" class="foods">Loading foods...</div>
-</div>
+<div id="foods" class="foods">Loading food items...</div>
+</section>
 
-<div class="panel">
+<!-- CART -->
+<section class="panel">
 <h2>🛒 My Cart</h2>
 <div id="cart">Your cart is empty.</div>
-<h3 id="total">Total: ₹0</h3>
-</div>
+<h3 id="total">Total: ₹0.00</h3>
+</section>
 
-<div class="panel">
+<!-- CHECKOUT -->
+<section class="panel">
 <h2>📦 Checkout</h2>
-<input id="customer" placeholder="Customer name">
-<input id="phone" placeholder="Mobile number">
-<input id="address" placeholder="Full delivery address">
+<input id="customer" placeholder="Customer Name">
+<input id="phone" type="tel" placeholder="Mobile Number">
+<input id="address" placeholder="Full Delivery Address">
 <select id="payment">
 <option value="COD">Cash on Delivery</option>
 <option value="UPI">UPI (Demo only)</option>
 </select>
 <button onclick="placeOrder()">Place Order</button>
-<p class="small">UPI is only a demo option. No real payment is collected.</p>
-</div>
+<p class="small">UPI is a demo option only. No actual payment is collected.</p>
+</section>
 
-<div class="panel">
+<!-- CUSTOMER ORDERS -->
+<section class="panel">
 <h2>📋 My Orders</h2>
-<button class="secondary" onclick="loadOrders()">Refresh Orders</button>
-<div id="orders">Login to view your orders.</div>
-</div>
+<button class="dark" onclick="loadOrders()">Refresh My Orders</button>
+<div id="orders">Please login to view your orders.</div>
+</section>
+
+<!-- ADMIN DASHBOARD -->
+<section id="adminPanel" class="panel hidden">
+<h2 class="admin-title">🛠️ Admin Dashboard</h2>
+<p>Welcome, Admin!</p>
+
+<h3>➕ Add New Food</h3>
+<input id="foodName" placeholder="Food Name">
+<input id="foodCategory" placeholder="Food Category">
+<input id="foodPrice" type="number" min="1" placeholder="Food Price">
+<input id="foodImage" type="url" placeholder="Food Image URL (optional)">
+<button onclick="addFood()">Add Food</button>
+
+<hr>
+<h3>🍔 Manage Food Items</h3>
+<button class="dark" onclick="loadAdminFoods()">Refresh Food List</button>
+<div id="adminFoods">Loading...</div>
+
+<hr>
+<h3>📦 All Customer Orders</h3>
+<button class="dark" onclick="loadAdminOrders()">Refresh All Orders</button>
+<div id="adminOrders">Loading...</div>
+</section>
+
 </main>
+
+<footer>© My Food App | Fresh Food, Fast Delivery</footer>
 
 <script>
 const SUPABASE_URL =
@@ -86,48 +128,150 @@ const SUPABASE_KEY =
 "sb_publishable_Zcgnghki_9YzyrkOxq8tiQ_QwzvfL9_";
 
 const db = window.supabase.createClient(
-  SUPABASE_URL, SUPABASE_KEY
+  SUPABASE_URL,
+  SUPABASE_KEY
 );
 
 let products = [];
 let cart = {};
+let currentUser = null;
+let isAdmin = false;
 
-function message(text) {
-  document.getElementById("message").textContent = text;
+function el(id) {
+  return document.getElementById(id);
 }
 
-async function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+function safe(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[c]);
+}
 
-  const {error} = await db.auth.signInWithPassword({
-    email, password
+function notify(text) {
+  el("message").textContent = text;
+}
+
+function money(value) {
+  return "₹" + Number(value).toFixed(2);
+}
+
+// SIGN UP
+async function signup() {
+  const email = el("email").value.trim();
+  const password = el("password").value;
+
+  if(!email || password.length < 6) {
+    notify("Enter email and password (minimum 6 characters).");
+    return;
+  }
+
+  const {data,error} = await db.auth.signUp({
+    email,
+    password
   });
 
-  if(error) return message(error.message);
+  if(error) {
+    notify(error.message);
+    return;
+  }
 
-  message("Login successful!");
+  if(data.session) {
+    notify("Account created successfully!");
+    await refreshAccount();
+  } else {
+    notify("Account created. Check your email and confirm it before login.");
+  }
+}
+
+// LOGIN
+async function login() {
+  const email = el("email").value.trim();
+  const password = el("password").value;
+
+  if(!email || !password) {
+    notify("Enter email and password.");
+    return;
+  }
+
+  const {error} = await db.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error) {
+    notify(error.message);
+    return;
+  }
+
+  notify("Login successful!");
+  await refreshAccount();
+}
+
+// LOGOUT
+async function logout() {
+  const {error} = await db.auth.signOut();
+
+  if(error) {
+    notify(error.message);
+    return;
+  }
+
+  currentUser = null;
+  isAdmin = false;
+  cart = {};
+
+  el("adminPanel").classList.add("hidden");
+  el("accountInfo").textContent = "Please login or create an account.";
+  el("orders").textContent = "Please login to view your orders.";
+
+  showCart();
+  notify("Logged out successfully.");
+}
+
+// ACCOUNT AND ADMIN CHECK
+async function refreshAccount() {
+  const {data,error} = await db.auth.getUser();
+
+  if(error) {
+    notify(error.message);
+    return;
+  }
+
+  currentUser = data.user;
+
+  if(!currentUser) {
+    isAdmin = false;
+    el("adminPanel").classList.add("hidden");
+    el("accountInfo").textContent = "Please login.";
+    return;
+  }
+
+  el("accountInfo").textContent =
+    "Logged in: " + currentUser.email;
+
+  const {data:adminResult,error:adminError} =
+    await db.rpc("is_admin");
+
+  isAdmin = !adminError && adminResult === true;
+
+  if(isAdmin) {
+    el("adminPanel").classList.remove("hidden");
+    loadAdminFoods();
+    loadAdminOrders();
+    notify("Admin login successful!");
+  } else {
+    el("adminPanel").classList.add("hidden");
+    notify("Customer login successful!");
+  }
+
   loadOrders();
 }
 
-async function signup() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  const {error} = await db.auth.signUp({email,password});
-
-  if(error) return message(error.message);
-
-  message("Sign up successful. Check your email if confirmation is required.");
-}
-
-async function logout() {
-  await db.auth.signOut();
-  message("Logged out.");
-  document.getElementById("orders").textContent =
-    "Login to view your orders.";
-}
-
+// LOAD FOOD MENU
 async function loadFoods() {
   const {data,error} = await db
     .from("products")
@@ -136,49 +280,42 @@ async function loadFoods() {
     .order("name");
 
   if(error) {
-    document.getElementById("foods").textContent = error.message;
+    el("foods").textContent = error.message;
     return;
   }
 
   products = data || [];
   showFoods();
+  showCart();
 }
 
+// DISPLAY FOODS
 function showFoods() {
-  const term = document.getElementById("search").value.toLowerCase();
+  const term = el("search").value.toLowerCase();
 
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(term) ||
     (p.category || "").toLowerCase().includes(term)
   );
 
-  document.getElementById("foods").innerHTML =
-    filtered.map(p => `
-      <div class="food">
-        <img src="${p.image_url || ""}"
-          onerror="this.style.display='none'"
-          alt="">
-        <h3>${escapeHTML(p.name)}</h3>
-        <p class="small">${escapeHTML(p.category || "")}</p>
-        <p class="price">₹${Number(p.price).toFixed(2)}</p>
-        <button onclick="addCart('${p.id}')">Add to Cart</button>
-      </div>
-    `).join("") || "No food items found.";
+  el("foods").innerHTML = filtered.map(p => `
+    <div class="food">
+      ${p.image_url ? `<img src="${safe(p.image_url)}" alt="${safe(p.name)}" onerror="this.style.display='none'">` : ""}
+      <h3>${safe(p.name)}</h3>
+      <p class="small">${safe(p.category || "Food")}</p>
+      <p class="price">${money(p.price)}</p>
+      <button onclick="addCart('${p.id}')">Add to Cart</button>
+    </div>
+  `).join("") || "No food items found.";
 }
 
-function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, c => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;",
-    '"':"&quot;", "'":"&#39;"
-  })[c]);
-}
-
+// CART
 function addCart(id) {
   cart[id] = (cart[id] || 0) + 1;
   showCart();
 }
 
-function changeQty(id, amount) {
+function changeQty(id,amount) {
   cart[id] = (cart[id] || 0) + amount;
   if(cart[id] <= 0) delete cart[id];
   showCart();
@@ -196,21 +333,24 @@ function showCart() {
     total += subtotal;
 
     html += `
-      <p>${escapeHTML(p.name)} —
-      ₹${Number(p.price)} × ${cart[id]}
-      <button onclick="changeQty('${id}',-1)">−</button>
-      <button onclick="changeQty('${id}',1)">+</button>
-      = ₹${subtotal}</p>
+      <div class="row">
+        <div>
+          <b>${safe(p.name)}</b>
+          <p>${money(p.price)} × ${cart[id]} = ${money(subtotal)}</p>
+        </div>
+        <div>
+          <button onclick="changeQty('${p.id}',-1)">−</button>
+          <button onclick="changeQty('${p.id}',1)">+</button>
+        </div>
+      </div>
     `;
   }
 
-  document.getElementById("cart").innerHTML =
-    html || "Your cart is empty.";
-
-  document.getElementById("total").textContent =
-    "Total: ₹" + total.toFixed(2);
+  el("cart").innerHTML = html || "Your cart is empty.";
+  el("total").textContent = "Total: " + money(total);
 }
 
+// CHECKOUT
 async function placeOrder() {
   const {data:{user}} = await db.auth.getUser();
 
@@ -219,31 +359,31 @@ async function placeOrder() {
     return;
   }
 
-  const items = Object.entries(cart).map(([product_id,quantity]) => ({
-    product_id, quantity
-  }));
+  const items = Object.entries(cart).map(
+    ([product_id,quantity]) => ({product_id,quantity})
+  );
 
   if(items.length === 0) {
     alert("Your cart is empty.");
     return;
   }
 
-  const customer = document.getElementById("customer").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const address = document.getElementById("address").value.trim();
-  const payment = document.getElementById("payment").value;
+  const customer = el("customer").value.trim();
+  const phone = el("phone").value.trim();
+  const address = el("address").value.trim();
+  const payment = el("payment").value;
 
-  if(!customer || !phone || !address) {
-    alert("Please enter all delivery details.");
+  if(customer.length < 2 || phone.length < 8 || address.length < 5) {
+    alert("Enter valid customer name, phone and address.");
     return;
   }
 
-  const {data,error} = await db.rpc("place_order", {
-    p_customer_name: customer,
-    p_phone: phone,
-    p_address: address,
-    p_payment_method: payment,
-    p_items: items
+  const {data,error} = await db.rpc("place_order",{
+    p_customer_name:customer,
+    p_phone:phone,
+    p_address:address,
+    p_payment_method:payment,
+    p_items:items
   });
 
   if(error) {
@@ -252,17 +392,21 @@ async function placeOrder() {
   }
 
   alert("Order placed successfully! Order ID: " + data);
+
   cart = {};
   showCart();
-  loadOrders();
+  await loadOrders();
 }
 
+// CUSTOMER ORDERS
 async function loadOrders() {
-  const {data:{user}} = await db.auth.getUser();
+  if(!currentUser) {
+    const {data:{user}} = await db.auth.getUser();
+    currentUser = user;
+  }
 
-  if(!user) {
-    document.getElementById("orders").textContent =
-      "Please login first.";
+  if(!currentUser) {
+    el("orders").textContent = "Please login first.";
     return;
   }
 
@@ -272,26 +416,221 @@ async function loadOrders() {
     .order("created_at",{ascending:false});
 
   if(error) {
-    document.getElementById("orders").textContent = error.message;
+    el("orders").textContent = error.message;
     return;
   }
 
-  document.getElementById("orders").innerHTML =
-    data.length ? data.map(o => `
-      <div class="panel">
-        <b>Order: ${escapeHTML(o.id)}</b>
-        <p>Total: ₹${Number(o.total).toFixed(2)}</p>
-        <p>Status: ${escapeHTML(o.status)}</p>
-        <p class="small">${escapeHTML(o.created_at)}</p>
-      </div>
-    `).join("") : "No orders yet.";
+  el("orders").innerHTML = (data || []).map(o => `
+    <div class="order">
+      <b>Order ID: ${safe(o.id)}</b>
+      <p>Total: ${money(o.total)}</p>
+      <p>Status: <b>${safe(o.status)}</b></p>
+      <p>Payment: ${safe(o.payment_method)}</p>
+      <p class="small">${safe(o.created_at)}</p>
+    </div>
+  `).join("") || "No orders yet.";
 }
 
-db.auth.onAuthStateChange(() => {
-  loadOrders();
+// ADMIN: ADD FOOD
+async function addFood() {
+  if(!isAdmin) {
+    alert("Admin access required.");
+    return;
+  }
+
+  const name = el("foodName").value.trim();
+  const category = el("foodCategory").value.trim();
+  const price = Number(el("foodPrice").value);
+  const image_url = el("foodImage").value.trim();
+
+  if(!name || !category || !Number.isFinite(price) || price <= 0) {
+    alert("Enter valid food details.");
+    return;
+  }
+
+  if(image_url) {
+    try {
+      const parsed = new URL(image_url);
+      if(parsed.protocol !== "https:") {
+        alert("Image URL must use HTTPS.");
+        return;
+      }
+    } catch {
+      alert("Enter a valid image URL.");
+      return;
+    }
+  }
+
+  const {error} = await db.from("products").insert({
+    name,category,price,image_url,available:true
+  });
+
+  if(error) {
+    alert("Food add failed: " + error.message);
+    return;
+  }
+
+  el("foodName").value = "";
+  el("foodCategory").value = "";
+  el("foodPrice").value = "";
+  el("foodImage").value = "";
+
+  alert("Food added successfully!");
+  await loadFoods();
+  await loadAdminFoods();
+}
+
+// ADMIN: LOAD FOOD
+async function loadAdminFoods() {
+  if(!isAdmin) return;
+
+  const {data,error} = await db
+    .from("products")
+    .select("*")
+    .order("created_at",{ascending:false});
+
+  if(error) {
+    el("adminFoods").textContent = error.message;
+    return;
+  }
+
+  el("adminFoods").innerHTML = (data || []).map(p => `
+    <div class="order">
+      <b>${safe(p.name)}</b>
+      <p>Price: ${money(p.price)}</p>
+      <p>Availability: ${p.available ? "Available" : "Unavailable"}</p>
+      <button onclick="changeFoodPrice('${p.id}',${Number(p.price)})">Change Price</button>
+      <button class="dark" onclick="toggleFood('${p.id}',${p.available})">
+        ${p.available ? "Make Unavailable" : "Make Available"}
+      </button>
+    </div>
+  `).join("") || "No food items.";
+}
+
+// ADMIN: CHANGE PRICE
+async function changeFoodPrice(id,oldPrice) {
+  if(!isAdmin) return;
+
+  const value = prompt("Enter new price:",oldPrice);
+  if(value === null) return;
+
+  const price = Number(value);
+
+  if(!Number.isFinite(price) || price <= 0) {
+    alert("Enter a valid price.");
+    return;
+  }
+
+  const {error} = await db
+    .from("products")
+    .update({price})
+    .eq("id",id);
+
+  if(error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Price updated!");
+  await loadFoods();
+  await loadAdminFoods();
+}
+
+// ADMIN: AVAILABILITY
+async function toggleFood(id,currentValue) {
+  if(!isAdmin) return;
+
+  const {error} = await db
+    .from("products")
+    .update({available:!currentValue})
+    .eq("id",id);
+
+  if(error) {
+    alert(error.message);
+    return;
+  }
+
+  await loadFoods();
+  await loadAdminFoods();
+}
+
+// ADMIN: VIEW ORDERS
+async function loadAdminOrders() {
+  if(!isAdmin) return;
+
+  const {data,error} = await db
+    .from("orders")
+    .select("*")
+    .order("created_at",{ascending:false});
+
+  if(error) {
+    el("adminOrders").textContent = error.message;
+    return;
+  }
+
+  const statuses = [
+    "Placed",
+    "Confirmed",
+    "Preparing",
+    "Out for Delivery",
+    "Delivered",
+    "Cancelled"
+  ];
+
+  el("adminOrders").innerHTML = (data || []).map(o => `
+    <div class="order">
+      <b>Order ID: ${safe(o.id)}</b>
+      <p>Customer: ${safe(o.customer_name)}</p>
+      <p>Phone: ${safe(o.phone)}</p>
+      <p>Address: ${safe(o.address)}</p>
+      <p>Total: ${money(o.total)}</p>
+      <p>Payment: ${safe(o.payment_method)}</p>
+      <p>Current Status: <b>${safe(o.status)}</b></p>
+      <select id="status-${o.id}">
+        ${statuses.map(s => `
+          <option value="${s}" ${o.status === s ? "selected" : ""}>${s}</option>
+        `).join("")}
+      </select>
+      <button class="green" onclick="updateOrderStatus('${o.id}')">Update Status</button>
+    </div>
+  `).join("") || "No customer orders yet.";
+}
+
+// ADMIN: UPDATE ORDER STATUS
+async function updateOrderStatus(id) {
+  if(!isAdmin) return;
+
+  const status = el("status-" + id).value;
+
+  const {error} = await db
+    .from("orders")
+    .update({status})
+    .eq("id",id);
+
+  if(error) {
+    alert("Status update failed: " + error.message);
+    return;
+  }
+
+  alert("Order status updated!");
+  await loadAdminOrders();
+}
+
+// AUTH STATE
+db.auth.onAuthStateChange((event,session) => {
+  setTimeout(() => {
+    currentUser = session?.user || null;
+    refreshAccount();
+  },0);
 });
 
-loadFoods();
+// START APP
+async function startApp() {
+  await loadFoods();
+  await refreshAccount();
+}
+
+startApp();
 </script>
 </body>
 </html>
