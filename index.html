@@ -6,12 +6,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My Food App</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f5f6f8;color:#222}
-header{background:#e23744;color:white;padding:20px;text-align:center}
+header{background:#e23744;color:white;padding:22px;text-align:center}
 header h1{margin:0}
-header p{margin:7px 0 0}
 main{max-width:1050px;margin:auto;padding:15px}
 .panel{background:white;padding:18px;border-radius:14px;margin:15px 0;box-shadow:0 2px 9px #0000000d}
 h2{margin-top:0}
@@ -29,12 +29,31 @@ button.gray{background:#777}
 .price{font-weight:bold;color:#e23744}
 .small{font-size:13px;color:#777}
 .hidden{display:none!important}
-.order{border:1px solid #eee;padding:13px;border-radius:10px;margin:10px 0;overflow-wrap:anywhere}
+.order{border:1px solid #eee;padding:14px;border-radius:10px;margin:12px 0;overflow-wrap:anywhere}
 #message{color:#16733e;font-weight:bold}
 .admin-title{color:#e23744}
 footer{text-align:center;padding:20px;color:#777}
+
+/* ORDER TRACKER */
+.tracker{display:flex;justify-content:space-between;gap:3px;margin:20px 0;position:relative}
+.track-step{flex:1;text-align:center;position:relative;z-index:1}
+.track-circle{width:28px;height:28px;border-radius:50%;background:#ddd;color:#555;display:flex;align-items:center;justify-content:center;margin:auto;font-size:13px;font-weight:bold}
+.track-step.done .track-circle{background:#16834a;color:white}
+.track-step.active .track-circle{background:#e23744;color:white}
+.track-label{font-size:10px;margin-top:7px;color:#777;overflow-wrap:anywhere}
+.track-step.done .track-label,.track-step.active .track-label{color:#222;font-weight:bold}
+.tracker-line{height:4px;background:#ddd;flex:1;margin-top:12px}
+.tracker-line.done{background:#16834a}
+.status-badge{display:inline-block;background:#fff0f0;color:#d32636;padding:6px 10px;border-radius:20px;font-size:13px;font-weight:bold}
+.cancelled{color:#d32636;font-weight:bold}
+@media(max-width:450px){
+.track-label{font-size:9px}
+.tracker{gap:1px}
+.track-circle{width:24px;height:24px}
+}
 </style>
 </head>
+
 <body>
 
 <header>
@@ -44,7 +63,6 @@ footer{text-align:center;padding:20px;color:#777}
 
 <main>
 
-<!-- CUSTOMER LOGIN -->
 <section class="panel">
 <h2>👤 Customer Account</h2>
 <input id="email" type="email" placeholder="Email Address">
@@ -58,21 +76,18 @@ footer{text-align:center;padding:20px;color:#777}
 <p id="accountInfo" class="small">Please login or create an account.</p>
 </section>
 
-<!-- FOOD MENU -->
 <section class="panel">
 <h2>🍽️ Food Menu</h2>
 <input id="search" placeholder="Search food..." oninput="showFoods()">
 <div id="foods" class="foods">Loading food items...</div>
 </section>
 
-<!-- CART -->
 <section class="panel">
 <h2>🛒 My Cart</h2>
 <div id="cart">Your cart is empty.</div>
 <h3 id="total">Total: ₹0.00</h3>
 </section>
 
-<!-- CHECKOUT -->
 <section class="panel">
 <h2>📦 Checkout</h2>
 <input id="customer" placeholder="Customer Name">
@@ -86,14 +101,13 @@ footer{text-align:center;padding:20px;color:#777}
 <p class="small">UPI is a demo option only. No actual payment is collected.</p>
 </section>
 
-<!-- CUSTOMER ORDERS -->
 <section class="panel">
-<h2>📋 My Orders</h2>
+<h2>📋 My Orders & Live Status</h2>
 <button class="dark" onclick="loadOrders()">Refresh My Orders</button>
+<p class="small">Order status updates automatically when Realtime is enabled.</p>
 <div id="orders">Please login to view your orders.</div>
 </section>
 
-<!-- ADMIN DASHBOARD -->
 <section id="adminPanel" class="panel hidden">
 <h2 class="admin-title">🛠️ Admin Dashboard</h2>
 <p>Welcome, Admin!</p>
@@ -136,6 +150,15 @@ let products = [];
 let cart = {};
 let currentUser = null;
 let isAdmin = false;
+let orderChannel = null;
+
+const statuses = [
+  "Placed",
+  "Confirmed",
+  "Preparing",
+  "Out for Delivery",
+  "Delivered"
+];
 
 function el(id) {
   return document.getElementById(id);
@@ -213,6 +236,11 @@ async function login() {
 
 // LOGOUT
 async function logout() {
+  if(orderChannel) {
+    await db.removeChannel(orderChannel);
+    orderChannel = null;
+  }
+
   const {error} = await db.auth.signOut();
 
   if(error) {
@@ -260,15 +288,57 @@ async function refreshAccount() {
 
   if(isAdmin) {
     el("adminPanel").classList.remove("hidden");
-    loadAdminFoods();
-    loadAdminOrders();
+    await loadAdminFoods();
+    await loadAdminOrders();
     notify("Admin login successful!");
   } else {
     el("adminPanel").classList.add("hidden");
     notify("Customer login successful!");
   }
 
-  loadOrders();
+  await subscribeOrderUpdates();
+  await loadOrders();
+}
+
+// REALTIME ORDER SUBSCRIPTION
+async function subscribeOrderUpdates() {
+  if(orderChannel) {
+    await db.removeChannel(orderChannel);
+    orderChannel = null;
+  }
+
+  if(!currentUser) return;
+
+  let config = {
+    event: "*",
+    schema: "public",
+    table: "orders"
+  };
+
+  // Customer listens only to their own orders.
+  // Admin listens to all order changes.
+  if(!isAdmin) {
+    config.filter = "user_id=eq." + currentUser.id;
+  }
+
+  orderChannel = db
+    .channel("orders-" + currentUser.id)
+    .on("postgres_changes",config,payload => {
+      loadOrders();
+
+      if(isAdmin) {
+        loadAdminOrders();
+      }
+
+      if(payload.eventType === "UPDATE") {
+        notify("Order status updated!");
+      }
+    })
+    .subscribe((status) => {
+      if(status === "SUBSCRIBED") {
+        console.log("Order Realtime connected.");
+      }
+    });
 }
 
 // LOAD FOOD MENU
@@ -398,6 +468,29 @@ async function placeOrder() {
   await loadOrders();
 }
 
+// ORDER TRACKER HTML
+function trackerHTML(status) {
+  if(status === "Cancelled") {
+    return `<p class="cancelled">❌ This order has been cancelled.</p>`;
+  }
+
+  const current = statuses.indexOf(status);
+  if(current === -1) {
+    return `<p>Status: ${safe(status)}</p>`;
+  }
+
+  return `
+    <div class="tracker">
+      ${statuses.map((s,i) => `
+        <div class="track-step ${i < current ? "done" : ""} ${i === current ? "active" : ""}">
+          <div class="track-circle">${i < current ? "✓" : i + 1}</div>
+          <div class="track-label">${safe(s)}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
 // CUSTOMER ORDERS
 async function loadOrders() {
   if(!currentUser) {
@@ -413,6 +506,7 @@ async function loadOrders() {
   const {data,error} = await db
     .from("orders")
     .select("*")
+    .eq("user_id",currentUser.id)
     .order("created_at",{ascending:false});
 
   if(error) {
@@ -424,9 +518,10 @@ async function loadOrders() {
     <div class="order">
       <b>Order ID: ${safe(o.id)}</b>
       <p>Total: ${money(o.total)}</p>
-      <p>Status: <b>${safe(o.status)}</b></p>
+      <p>Status: <span class="status-badge">${safe(o.status)}</span></p>
+      ${trackerHTML(o.status)}
       <p>Payment: ${safe(o.payment_method)}</p>
-      <p class="small">${safe(o.created_at)}</p>
+      <p class="small">Order Date: ${safe(o.created_at)}</p>
     </div>
   `).join("") || "No orders yet.";
 }
@@ -568,7 +663,7 @@ async function loadAdminOrders() {
     return;
   }
 
-  const statuses = [
+  const adminStatuses = [
     "Placed",
     "Confirmed",
     "Preparing",
@@ -587,7 +682,7 @@ async function loadAdminOrders() {
       <p>Payment: ${safe(o.payment_method)}</p>
       <p>Current Status: <b>${safe(o.status)}</b></p>
       <select id="status-${o.id}">
-        ${statuses.map(s => `
+        ${adminStatuses.map(s => `
           <option value="${s}" ${o.status === s ? "selected" : ""}>${s}</option>
         `).join("")}
       </select>
