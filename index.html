@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Food App</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f6f6f6;color:#222}
+header{background:#e23744;color:white;padding:18px;text-align:center}
+header h1{margin:0}
+main{max-width:950px;margin:auto;padding:15px}
+.panel{background:white;padding:16px;border-radius:12px;margin:15px 0}
+input,button{padding:12px;border-radius:8px;border:1px solid #ddd;width:100%;margin:6px 0}
+button{background:#e23744;color:white;border:0;font-weight:bold;cursor:pointer}
+button.secondary{background:#333}
+.foods{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}
+.food{background:white;padding:12px;border-radius:12px}
+.food img{width:100%;height:110px;object-fit:cover;border-radius:8px}
+.food h3{margin:8px 0}
+.price{color:#e23744;font-weight:bold}
+.small{font-size:13px;color:#666}
+.row{display:flex;gap:8px;align-items:center}
+.row input{flex:1}
+.hidden{display:none}
+#message{padding:10px;color:#176b36}
+</style>
+</head>
+<body>
+<header>
+<h1>🍔 My Food App</h1>
+<p>Fresh Food • Fast Delivery</p>
+</header>
+
+<main>
+<div class="panel">
+<h2>Customer Login</h2>
+<input id="email" type="email" placeholder="Email address">
+<input id="password" type="password" placeholder="Password">
+<div class="row">
+<button onclick="login()">Login</button>
+<button class="secondary" onclick="signup()">Sign Up</button>
+</div>
+<button class="secondary" onclick="logout()">Logout</button>
+<p id="message"></p>
+</div>
+
+<div class="panel">
+<h2>🍽️ Food Menu</h2>
+<input id="search" placeholder="Search food..." oninput="showFoods()">
+<div id="foods" class="foods">Loading foods...</div>
+</div>
+
+<div class="panel">
+<h2>🛒 My Cart</h2>
+<div id="cart">Your cart is empty.</div>
+<h3 id="total">Total: ₹0</h3>
+</div>
+
+<div class="panel">
+<h2>📦 Checkout</h2>
+<input id="customer" placeholder="Customer name">
+<input id="phone" placeholder="Mobile number">
+<input id="address" placeholder="Full delivery address">
+<select id="payment">
+<option value="COD">Cash on Delivery</option>
+<option value="UPI">UPI (Demo only)</option>
+</select>
+<button onclick="placeOrder()">Place Order</button>
+<p class="small">UPI is only a demo option. No real payment is collected.</p>
+</div>
+
+<div class="panel">
+<h2>📋 My Orders</h2>
+<button class="secondary" onclick="loadOrders()">Refresh Orders</button>
+<div id="orders">Login to view your orders.</div>
+</div>
+</main>
+
+<script>
+const SUPABASE_URL =
+"https://soxelkicpckxirvbtmfy.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_Zcgnghki_9YzyrkOxq8tiQ_QwzvfL9_";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL, SUPABASE_KEY
+);
+
+let products = [];
+let cart = {};
+
+function message(text) {
+  document.getElementById("message").textContent = text;
+}
+
+async function login() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  const {error} = await db.auth.signInWithPassword({
+    email, password
+  });
+
+  if(error) return message(error.message);
+
+  message("Login successful!");
+  loadOrders();
+}
+
+async function signup() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  const {error} = await db.auth.signUp({email,password});
+
+  if(error) return message(error.message);
+
+  message("Sign up successful. Check your email if confirmation is required.");
+}
+
+async function logout() {
+  await db.auth.signOut();
+  message("Logged out.");
+  document.getElementById("orders").textContent =
+    "Login to view your orders.";
+}
+
+async function loadFoods() {
+  const {data,error} = await db
+    .from("products")
+    .select("*")
+    .eq("available",true)
+    .order("name");
+
+  if(error) {
+    document.getElementById("foods").textContent = error.message;
+    return;
+  }
+
+  products = data || [];
+  showFoods();
+}
+
+function showFoods() {
+  const term = document.getElementById("search").value.toLowerCase();
+
+  const filtered = products.filter(p =>
+    p.name.toLowerCase().includes(term) ||
+    (p.category || "").toLowerCase().includes(term)
+  );
+
+  document.getElementById("foods").innerHTML =
+    filtered.map(p => `
+      <div class="food">
+        <img src="${p.image_url || ""}"
+          onerror="this.style.display='none'"
+          alt="">
+        <h3>${escapeHTML(p.name)}</h3>
+        <p class="small">${escapeHTML(p.category || "")}</p>
+        <p class="price">₹${Number(p.price).toFixed(2)}</p>
+        <button onclick="addCart('${p.id}')">Add to Cart</button>
+      </div>
+    `).join("") || "No food items found.";
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;",
+    '"':"&quot;", "'":"&#39;"
+  })[c]);
+}
+
+function addCart(id) {
+  cart[id] = (cart[id] || 0) + 1;
+  showCart();
+}
+
+function changeQty(id, amount) {
+  cart[id] = (cart[id] || 0) + amount;
+  if(cart[id] <= 0) delete cart[id];
+  showCart();
+}
+
+function showCart() {
+  let total = 0;
+  let html = "";
+
+  for(const id in cart) {
+    const p = products.find(x => x.id === id);
+    if(!p) continue;
+
+    const subtotal = Number(p.price) * cart[id];
+    total += subtotal;
+
+    html += `
+      <p>${escapeHTML(p.name)} —
+      ₹${Number(p.price)} × ${cart[id]}
+      <button onclick="changeQty('${id}',-1)">−</button>
+      <button onclick="changeQty('${id}',1)">+</button>
+      = ₹${subtotal}</p>
+    `;
+  }
+
+  document.getElementById("cart").innerHTML =
+    html || "Your cart is empty.";
+
+  document.getElementById("total").textContent =
+    "Total: ₹" + total.toFixed(2);
+}
+
+async function placeOrder() {
+  const {data:{user}} = await db.auth.getUser();
+
+  if(!user) {
+    alert("Please login first.");
+    return;
+  }
+
+  const items = Object.entries(cart).map(([product_id,quantity]) => ({
+    product_id, quantity
+  }));
+
+  if(items.length === 0) {
+    alert("Your cart is empty.");
+    return;
+  }
+
+  const customer = document.getElementById("customer").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const payment = document.getElementById("payment").value;
+
+  if(!customer || !phone || !address) {
+    alert("Please enter all delivery details.");
+    return;
+  }
+
+  const {data,error} = await db.rpc("place_order", {
+    p_customer_name: customer,
+    p_phone: phone,
+    p_address: address,
+    p_payment_method: payment,
+    p_items: items
+  });
+
+  if(error) {
+    alert("Order failed: " + error.message);
+    return;
+  }
+
+  alert("Order placed successfully! Order ID: " + data);
+  cart = {};
+  showCart();
+  loadOrders();
+}
+
+async function loadOrders() {
+  const {data:{user}} = await db.auth.getUser();
+
+  if(!user) {
+    document.getElementById("orders").textContent =
+      "Please login first.";
+    return;
+  }
+
+  const {data,error} = await db
+    .from("orders")
+    .select("*")
+    .order("created_at",{ascending:false});
+
+  if(error) {
+    document.getElementById("orders").textContent = error.message;
+    return;
+  }
+
+  document.getElementById("orders").innerHTML =
+    data.length ? data.map(o => `
+      <div class="panel">
+        <b>Order: ${escapeHTML(o.id)}</b>
+        <p>Total: ₹${Number(o.total).toFixed(2)}</p>
+        <p>Status: ${escapeHTML(o.status)}</p>
+        <p class="small">${escapeHTML(o.created_at)}</p>
+      </div>
+    `).join("") : "No orders yet.";
+}
+
+db.auth.onAuthStateChange(() => {
+  loadOrders();
+});
+
+loadFoods();
+</script>
+</body>
+</html>
