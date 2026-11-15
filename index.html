@@ -3,53 +3,331 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My Food App</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101010">
+<title>Foodie Express | Online Food Ordering</title>
 
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f5f6f8;color:#222}
-header{background:#e23744;color:white;padding:22px;text-align:center}
-header h1{margin:0}
-main{max-width:1050px;margin:auto;padding:15px}
-.panel{background:white;padding:18px;border-radius:14px;margin:15px 0;box-shadow:0 2px 9px #0000000d}
-h2{margin-top:0}
-input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;margin:6px 0;font-size:15px}
-button{background:#e23744;color:white;border:0;padding:12px 15px;border-radius:8px;font-weight:bold;cursor:pointer;margin:5px 2px}
-button.dark{background:#333}
-button.green{background:#16834a}
-button.gray{background:#777}
-.row{display:flex;gap:8px;flex-wrap:wrap}
-.row>*{flex:1}
-.foods{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:13px}
-.food{background:white;border:1px solid #eee;border-radius:12px;padding:12px}
-.food img{width:100%;height:125px;object-fit:cover;border-radius:9px;background:#eee}
-.food h3{margin:9px 0}
-.price{font-weight:bold;color:#e23744}
-.small{font-size:13px;color:#777}
-.hidden{display:none!important}
-.order{border:1px solid #eee;padding:14px;border-radius:10px;margin:12px 0;overflow-wrap:anywhere}
-#message{color:#16733e;font-weight:bold}
-.admin-title{color:#e23744}
-footer{text-align:center;padding:20px;color:#777}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-/* ORDER TRACKER */
-.tracker{display:flex;justify-content:space-between;gap:3px;margin:20px 0;position:relative}
-.track-step{flex:1;text-align:center;position:relative;z-index:1}
-.track-circle{width:28px;height:28px;border-radius:50%;background:#ddd;color:#555;display:flex;align-items:center;justify-content:center;margin:auto;font-size:13px;font-weight:bold}
-.track-step.done .track-circle{background:#16834a;color:white}
-.track-step.active .track-circle{background:#e23744;color:white}
-.track-label{font-size:10px;margin-top:7px;color:#777;overflow-wrap:anywhere}
-.track-step.done .track-label,.track-step.active .track-label{color:#222;font-weight:bold}
-.tracker-line{height:4px;background:#ddd;flex:1;margin-top:12px}
-.tracker-line.done{background:#16834a}
-.status-badge{display:inline-block;background:#fff0f0;color:#d32636;padding:6px 10px;border-radius:20px;font-size:13px;font-weight:bold}
-.cancelled{color:#d32636;font-weight:bold}
-@media(max-width:450px){
-.track-label{font-size:9px}
-.tracker{gap:1px}
-.track-circle{width:24px;height:24px}
+:root {
+  --gold: #e5b94f;
+  --dark: #101010;
+  --card: #1b1b1b;
+  --text: #ffffff;
+  --muted: #aaaaaa;
+}
+
+body {
+  background: var(--dark);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+button, input, textarea {
+  font: inherit;
+}
+
+header {
+  background: #181818;
+  padding: 16px 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid #383838;
+}
+
+.logo {
+  font-size: 23px;
+  font-weight: bold;
+  color: var(--gold);
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin-left: 20px;
+}
+
+.hero {
+  min-height: 340px;
+  padding: 75px 7%;
+  display: flex;
+  align-items: center;
+  background:
+    linear-gradient(90deg, #000000e8, #00000066),
+    url("https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1400")
+    center/cover;
+}
+
+.hero h1 {
+  font-size: clamp(34px, 6vw, 55px);
+  margin-bottom: 15px;
+}
+
+.hero h1 span {
+  color: var(--gold);
+}
+
+.hero p {
+  color: #dddddd;
+  margin-bottom: 25px;
+}
+
+.btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  background: var(--gold);
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: auto;
+}
+
+section {
+  padding: 45px 0;
+}
+
+.section-title {
+  font-size: 28px;
+  margin-bottom: 25px;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 13px;
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 7px;
+  color: white;
+}
+
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.category-btn {
+  padding: 9px 16px;
+  border: 1px solid #555;
+  border-radius: 20px;
+  color: white;
+  background: #222;
+  cursor: pointer;
+}
+
+.category-btn.active {
+  background: var(--gold);
+  color: black;
+  border-color: var(--gold);
+}
+
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 22px;
+}
+
+.food-card {
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #333;
+  transition: .2s;
+}
+
+.food-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold);
+}
+
+.food-card img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+}
+
+.food-info {
+  padding: 17px;
+}
+
+.food-info h3 {
+  margin-bottom: 8px;
+}
+
+.food-info p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.food-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.price {
+  color: var(--gold);
+  font-weight: bold;
+  font-size: 19px;
+}
+
+.add-btn {
+  background: var(--gold);
+  border: none;
+  padding: 9px 13px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.cart-section {
+  background: #181818;
+  border-top: 1px solid #333;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 0;
+  border-bottom: 1px solid #383838;
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qty-controls button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: var(--gold);
+  cursor: pointer;
+}
+
+.total {
+  font-size: 23px;
+  color: var(--gold);
+  margin-top: 20px;
+  text-align: right;
+}
+
+.checkout {
+  background: var(--card);
+  padding: 22px;
+  border-radius: 10px;
+  margin-top: 25px;
+}
+
+.checkout input,
+.checkout textarea {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  margin: 12px 0;
+  background: #252525;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 6px;
+}
+
+.checkout textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.whatsapp-btn {
+  width: 100%;
+  padding: 15px;
+  background: #25d366;
+  border: none;
+  border-radius: 7px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.empty {
+  color: var(--muted);
+  padding: 15px 0;
+}
+
+footer {
+  text-align: center;
+  padding: 25px;
+  color: var(--muted);
+  border-top: 1px solid #333;
+}
+
+@media(max-width:600px) {
+  header {
+    padding: 14px 5%;
+  }
+
+  nav a {
+    margin-left: 8px;
+    font-size: 12px;
+  }
+
+  .hero {
+    min-height: 300px;
+    padding: 50px 6%;
+  }
+
+  .food-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .food-card img {
+    height: 125px;
+  }
+
+  .food-info {
+    padding: 12px;
+  }
+
+  .food-info h3 {
+    font-size: 15px;
+  }
+
+  .price {
+    font-size: 16px;
+  }
+
+  .add-btn {
+    padding: 8px;
+    font-size: 12px;
+  }
 }
 </style>
 </head>
@@ -57,696 +335,507 @@ footer{text-align:center;padding:20px;color:#777}
 <body>
 
 <header>
-<h1>🍔 My Food App</h1>
-<p>Fresh Food • Fast Delivery</p>
+  <div class="logo">🍽 Foodie Express</div>
+  <nav>
+    <a href="#menu">Menu</a>
+    <a href="#cart">Cart 🛒</a>
+  </nav>
 </header>
 
-<main>
-
-<section class="panel">
-<h2>👤 Customer Account</h2>
-<input id="email" type="email" placeholder="Email Address">
-<input id="password" type="password" placeholder="Password">
-<div class="row">
-<button onclick="login()">Login</button>
-<button class="dark" onclick="signup()">Sign Up</button>
-<button class="gray" onclick="logout()">Logout</button>
-</div>
-<p id="message"></p>
-<p id="accountInfo" class="small">Please login or create an account.</p>
-</section>
-
-<section class="panel">
-<h2>🍽️ Food Menu</h2>
-<input id="search" placeholder="Search food..." oninput="showFoods()">
-<div id="foods" class="foods">Loading food items...</div>
-</section>
-
-<section class="panel">
-<h2>🛒 My Cart</h2>
-<div id="cart">Your cart is empty.</div>
-<h3 id="total">Total: ₹0.00</h3>
-</section>
-
-<section class="panel">
-<h2>📦 Checkout</h2>
-<input id="customer" placeholder="Customer Name">
-<input id="phone" type="tel" placeholder="Mobile Number">
-<input id="address" placeholder="Full Delivery Address">
-<select id="payment">
-<option value="COD">Cash on Delivery</option>
-<option value="UPI">UPI (Demo only)</option>
-</select>
-<button onclick="placeOrder()">Place Order</button>
-<p class="small">UPI is a demo option only. No actual payment is collected.</p>
-</section>
-
-<section class="panel">
-<h2>📋 My Orders & Live Status</h2>
-<button class="dark" onclick="loadOrders()">Refresh My Orders</button>
-<p class="small">Order status updates automatically when Realtime is enabled.</p>
-<div id="orders">Please login to view your orders.</div>
-</section>
-
-<section id="adminPanel" class="panel hidden">
-<h2 class="admin-title">🛠️ Admin Dashboard</h2>
-<p>Welcome, Admin!</p>
-
-<h3>➕ Add New Food</h3>
-<input id="foodName" placeholder="Food Name">
-<input id="foodCategory" placeholder="Food Category">
-<input id="foodPrice" type="number" min="1" placeholder="Food Price">
-<input id="foodImage" type="url" placeholder="Food Image URL (optional)">
-<button onclick="addFood()">Add Food</button>
-
-<hr>
-<h3>🍔 Manage Food Items</h3>
-<button class="dark" onclick="loadAdminFoods()">Refresh Food List</button>
-<div id="adminFoods">Loading...</div>
-
-<hr>
-<h3>📦 All Customer Orders</h3>
-<button class="dark" onclick="loadAdminOrders()">Refresh All Orders</button>
-<div id="adminOrders">Loading...</div>
-</section>
-<!-- DELIVERY PARTNER DASHBOARD -->
-<section id="deliveryPanel" style="display:none; padding:15px;">
-  <h2>🚴 Delivery Partner Dashboard</h2>
-
-  <button onclick="loadDeliveryOrders()">
-    Refresh Orders
-  </button>
-
-  <div id="deliveryOrders">
-    <p>Assigned orders will appear here.</p>
-  </div>
-
-  <div id="gpsControls" style="display:none;">
-    <button onclick="startDeliveryGPS()">
-      Start GPS
-    </button>
-
-    <button onclick="stopDeliveryGPS()">
-      Stop GPS
-    </button>
+<section class="hero">
+  <div>
+    <h1>Delicious Food.<br><span>Delivered Fresh.</span></h1>
+    <p>Order your favourite food from our menu.</p>
+    <a href="#menu">
+      <button class="btn">Order Now</button>
+    </a>
   </div>
 </section>
-</main>
 
-<footer>© My Food App | Fresh Food, Fast Delivery</footer>
+<section id="menu">
+  <div class="container">
+    <h2 class="section-title">Our Food Menu</h2>
 
-<script>
-const SUPABASE_URL =
-"https://soxelkicpckxirvbtmfy.supabase.co";
-
-const SUPABASE_KEY =
-"sb_publishable_Zcgnghki_9YzyrkOxq8tiQ_QwzvfL9_";
-
-const db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-let products = [];
-let cart = {};
-let currentUser = null;
-let isAdmin = false;
-let orderChannel = null;
-
-const statuses = [
-  "Placed",
-  "Confirmed",
-  "Preparing",
-  "Out for Delivery",
-  "Delivered"
-];
-
-function el(id) {
-  return document.getElementById(id);
-}
-
-function safe(value) {
-  return String(value ?? "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
-  })[c]);
-}
-
-function notify(text) {
-  el("message").textContent = text;
-}
-
-function money(value) {
-  return "₹" + Number(value).toFixed(2);
-}
-
-// SIGN UP
-async function signup() {
-  const email = el("email").value.trim();
-  const password = el("password").value;
-
-  if(!email || password.length < 6) {
-    notify("Enter email and password (minimum 6 characters).");
-    return;
-  }
-
-  const {data,error} = await db.auth.signUp({
-    email,
-    password
-  });
-
-  if(error) {
-    notify(error.message);
-    return;
-  }
-
-  if(data.session) {
-    notify("Account created successfully!");
-    await refreshAccount();
-  } else {
-    notify("Account created. Check your email and confirm it before login.");
-  }
-}
-
-// LOGIN
-async function login() {
-  const email = el("email").value.trim();
-  const password = el("password").value;
-
-  if(!email || !password) {
-    notify("Enter email and password.");
-    return;
-  }
-
-  const {error} = await db.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if(error) {
-    notify(error.message);
-    return;
-  }
-
-  notify("Login successful!");
-  await refreshAccount();
-}
-
-// LOGOUT
-async function logout() {
-  if(orderChannel) {
-    await db.removeChannel(orderChannel);
-    orderChannel = null;
-  }
-
-  const {error} = await db.auth.signOut();
-
-  if(error) {
-    notify(error.message);
-    return;
-  }
-
-  currentUser = null;
-  isAdmin = false;
-  cart = {};
-
-  el("adminPanel").classList.add("hidden");
-  el("accountInfo").textContent = "Please login or create an account.";
-  el("orders").textContent = "Please login to view your orders.";
-
-  showCart();
-  notify("Logged out successfully.");
-}
-
-// ACCOUNT AND ADMIN CHECK
-async function refreshAccount() {
-  const {data,error} = await db.auth.getUser();
-
-  if(error) {
-    notify(error.message);
-    return;
-  }
-
-  currentUser = data.user;
-
-  if(!currentUser) {
-    isAdmin = false;
-    el("adminPanel").classList.add("hidden");
-    el("accountInfo").textContent = "Please login.";
-    return;
-  }
-
-  el("accountInfo").textContent =
-    "Logged in: " + currentUser.email;
-
-  const {data:adminResult,error:adminError} =
-    await db.rpc("is_admin");
-
-  isAdmin = !adminError && adminResult === true;
-
-  if(isAdmin) {
-    el("adminPanel").classList.remove("hidden");
-    await loadAdminFoods();
-    await loadAdminOrders();
-    notify("Admin login successful!");
-  } else {
-    el("adminPanel").classList.add("hidden");
-    notify("Customer login successful!");
-  }
-
-  await subscribeOrderUpdates();
-  await loadOrders();
-}
-
-// REALTIME ORDER SUBSCRIPTION
-async function subscribeOrderUpdates() {
-  if(orderChannel) {
-    await db.removeChannel(orderChannel);
-    orderChannel = null;
-  }
-
-  if(!currentUser) return;
-
-  let config = {
-    event: "*",
-    schema: "public",
-    table: "orders"
-  };
-
-  // Customer listens only to their own orders.
-  // Admin listens to all order changes.
-  if(!isAdmin) {
-    config.filter = "user_id=eq." + currentUser.id;
-  }
-
-  orderChannel = db
-    .channel("orders-" + currentUser.id)
-    .on("postgres_changes",config,payload => {
-      loadOrders();
-
-      if(isAdmin) {
-        loadAdminOrders();
-      }
-
-      if(payload.eventType === "UPDATE") {
-        notify("Order status updated!");
-      }
-    })
-    .subscribe((status) => {
-      if(status === "SUBSCRIBED") {
-        console.log("Order Realtime connected.");
-      }
-    });
-}
-
-// LOAD FOOD MENU
-async function loadFoods() {
-  const {data,error} = await db
-    .from("products")
-    .select("*")
-    .eq("available",true)
-    .order("name");
-
-  if(error) {
-    el("foods").textContent = error.message;
-    return;
-  }
-
-  products = data || [];
-  showFoods();
-  showCart();
-}
-
-// DISPLAY FOODS
-function showFoods() {
-  const term = el("search").value.toLowerCase();
-
-  const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(term) ||
-    (p.category || "").toLowerCase().includes(term)
-  );
-
-  el("foods").innerHTML = filtered.map(p => `
-    <div class="food">
-      ${p.image_url ? `<img src="${safe(p.image_url)}" alt="${safe(p.name)}" onerror="this.style.display='none'">` : ""}
-      <h3>${safe(p.name)}</h3>
-      <p class="small">${safe(p.category || "Food")}</p>
-      <p class="price">${money(p.price)}</p>
-      <button onclick="addCart('${p.id}')">Add to Cart</button>
+    <div class="search-box">
+      <input
+        type="search"
+        id="search"
+        placeholder="Search food..."
+        oninput="renderFoods()">
     </div>
-  `).join("") || "No food items found.";
-}
 
-// CART
-function addCart(id) {
-  cart[id] = (cart[id] || 0) + 1;
-  showCart();
-}
+    <div class="categories" id="categories"></div>
 
-function changeQty(id,amount) {
-  cart[id] = (cart[id] || 0) + amount;
-  if(cart[id] <= 0) delete cart[id];
-  showCart();
-}
+    <div class="food-grid" id="foodGrid"></div>
+  </div>
+</section>
 
-function showCart() {
-  let total = 0;
-  let html = "";
+<section class="cart-section" id="cart">
+  <div class="container">
+    <h2 class="section-title">🛒 Your Shopping Cart</h2>
 
-  for(const id in cart) {
-    const p = products.find(x => x.id === id);
-    if(!p) continue;
+    <div id="cartItems"></div>
 
-    const subtotal = Number(p.price) * cart[id];
-    total += subtotal;
+    <div class="total" id="total">Total: ₹0</div>
 
-    html += `
-      <div class="row">
-        <div>
-          <b>${safe(p.name)}</b>
-          <p>${money(p.price)} × ${cart[id]} = ${money(subtotal)}</p>
-        </div>
-        <div>
-          <button onclick="changeQty('${p.id}',-1)">−</button>
-          <button onclick="changeQty('${p.id}',1)">+</button>
-        </div>
-      </div>
-    `;
-  }
+    <div class="checkout">
+      <h2>Customer Details</h2>
 
-  el("cart").innerHTML = html || "Your cart is empty.";
-  el("total").textContent = "Total: " + money(total);
-}
+      <input
+        type="text"
+        id="customerName"
+        placeholder="Your Name"
+        autocomplete="name"
+        required>
 
-// CHECKOUT
-async function placeOrder() {
-  const {data:{user}} = await db.auth.getUser();
+      <input
+        type="tel"
+        id="customerPhone"
+        placeholder="Mobile Number"
+        autocomplete="tel"
+        inputmode="numeric"
+        required>
 
-  if(!user) {
-    alert("Please login first.");
-    return;
-  }
+      <textarea
+        id="customerAddress"
+        placeholder="Delivery Address"
+        autocomplete="street-address"
+        required></textarea>
 
-  const items = Object.entries(cart).map(
-    ([product_id,quantity]) => ({product_id,quantity})
-  );
+      <textarea
+        id="instructions"
+        placeholder="Additional instructions (optional)"></textarea>
 
-  if(items.length === 0) {
-    alert("Your cart is empty.");
-    return;
-  }
-
-  const customer = el("customer").value.trim();
-  const phone = el("phone").value.trim();
-  const address = el("address").value.trim();
-  const payment = el("payment").value;
-
-  if(customer.length < 2 || phone.length < 8 || address.length < 5) {
-    alert("Enter valid customer name, phone and address.");
-    return;
-  }
-
-  const {data,error} = await db.rpc("place_order",{
-    p_customer_name:customer,
-    p_phone:phone,
-    p_address:address,
-    p_payment_method:payment,
-    p_items:items
-  });
-
-  if(error) {
-    alert("Order failed: " + error.message);
-    return;
-  }
-
-  alert("Order placed successfully! Order ID: " + data);
-
-  cart = {};
-  showCart();
-  await loadOrders();
-}
-
-// ORDER TRACKER HTML
-function trackerHTML(status) {
-  if(status === "Cancelled") {
-    return `<p class="cancelled">❌ This order has been cancelled.</p>`;
-  }
-
-  const current = statuses.indexOf(status);
-  if(current === -1) {
-    return `<p>Status: ${safe(status)}</p>`;
-  }
-
-  return `
-    <div class="tracker">
-      ${statuses.map((s,i) => `
-        <div class="track-step ${i < current ? "done" : ""} ${i === current ? "active" : ""}">
-          <div class="track-circle">${i < current ? "✓" : i + 1}</div>
-          <div class="track-label">${safe(s)}</div>
-        </div>
-      `).join("")}
-    </div>
-  `;
-}
-
-// CUSTOMER ORDERS
-async function loadOrders() {
-  if(!currentUser) {
-    const {data:{user}} = await db.auth.getUser();
-    currentUser = user;
-  }
-
-  if(!currentUser) {
-    el("orders").textContent = "Please login first.";
-    return;
-  }
-
-  const {data,error} = await db
-    .from("orders")
-    .select("*")
-    .eq("user_id",currentUser.id)
-    .order("created_at",{ascending:false});
-
-  if(error) {
-    el("orders").textContent = error.message;
-    return;
-  }
-
-  el("orders").innerHTML = (data || []).map(o => `
-    <div class="order">
-      <b>Order ID: ${safe(o.id)}</b>
-      <p>Total: ${money(o.total)}</p>
-      <p>Status: <span class="status-badge">${safe(o.status)}</span></p>
-      ${trackerHTML(o.status)}
-      <p>Payment: ${safe(o.payment_method)}</p>
-      <p class="small">Order Date: ${safe(o.created_at)}</p>
-    </div>
-  `).join("") || "No orders yet.";
-}
-
-// ADMIN: ADD FOOD
-async function addFood() {
-  if(!isAdmin) {
-    alert("Admin access required.");
-    return;
-  }
-
-  const name = el("foodName").value.trim();
-  const category = el("foodCategory").value.trim();
-  const price = Number(el("foodPrice").value);
-  const image_url = el("foodImage").value.trim();
-
-  if(!name || !category || !Number.isFinite(price) || price <= 0) {
-    alert("Enter valid food details.");
-    return;
-  }
-
-  if(image_url) {
-    try {
-      const parsed = new URL(image_url);
-      if(parsed.protocol !== "https:") {
-        alert("Image URL must use HTTPS.");
-        return;
-      }
-    } catch {
-      alert("Enter a valid image URL.");
-      return;
-    }
-  }
-
-  const {error} = await db.from("products").insert({
-    name,category,price,image_url,available:true
-  });
-
-  if(error) {
-    alert("Food add failed: " + error.message);
-    return;
-  }
-
-  el("foodName").value = "";
-  el("foodCategory").value = "";
-  el("foodPrice").value = "";
-  el("foodImage").value = "";
-
-  alert("Food added successfully!");
-  await loadFoods();
-  await loadAdminFoods();
-}
-
-// ADMIN: LOAD FOOD
-async function loadAdminFoods() {
-  if(!isAdmin) return;
-
-  const {data,error} = await db
-    .from("products")
-    .select("*")
-    .order("created_at",{ascending:false});
-
-  if(error) {
-    el("adminFoods").textContent = error.message;
-    return;
-  }
-
-  el("adminFoods").innerHTML = (data || []).map(p => `
-    <div class="order">
-      <b>${safe(p.name)}</b>
-      <p>Price: ${money(p.price)}</p>
-      <p>Availability: ${p.available ? "Available" : "Unavailable"}</p>
-      <button onclick="changeFoodPrice('${p.id}',${Number(p.price)})">Change Price</button>
-      <button class="dark" onclick="toggleFood('${p.id}',${p.available})">
-        ${p.available ? "Make Unavailable" : "Make Available"}
+      <button class="whatsapp-btn" onclick="sendWhatsAppOrder()">
+        Order Through WhatsApp
       </button>
     </div>
-  `).join("") || "No food items.";
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 Foodie Express. All Rights Reserved.</p>
+  <p>Fresh Food • Fast Service • Happy Customers</p>
+</footer>
+
+<script>
+
+// ===================================
+// RESTAURANT SETTINGS
+// ===================================
+
+// Replace this with restaurant WhatsApp number.
+// Include country code 91. Do not include + or spaces.
+
+const WHATSAPP_NUMBER = "91XXXXXXXXXX";
+
+const CURRENCY = "₹";
+
+// ===================================
+// FOOD PRODUCTS
+// ===================================
+
+const foods = [
+  {
+    id: 1,
+    name: "Chicken Biryani",
+    category: "Biryani",
+    price: 150,
+    image: "https://images.unsplash.com/photo-1563379091339-03246963d96c?w=600",
+    description: "Delicious chicken biryani."
+  },
+  {
+    id: 2,
+    name: "Veg Biryani",
+    category: "Biryani",
+    price: 110,
+    image: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=600",
+    description: "Fresh vegetable biryani."
+  },
+  {
+    id: 3,
+    name: "Chicken Burger",
+    category: "Fast Food",
+    price: 120,
+    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600",
+    description: "Crispy chicken burger."
+  },
+  {
+    id: 4,
+    name: "Pizza",
+    category: "Fast Food",
+    price: 180,
+    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600",
+    description: "Cheesy delicious pizza."
+  },
+  {
+    id: 5,
+    name: "Masala Dosa",
+    category: "South Indian",
+    price: 80,
+    image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600",
+    description: "Traditional crispy dosa."
+  },
+  {
+    id: 6,
+    name: "Idli",
+    category: "South Indian",
+    price: 40,
+    image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600",
+    description: "Soft idli with chutney."
+  },
+  {
+    id: 7,
+    name: "Fresh Juice",
+    category: "Drinks",
+    price: 50,
+    image: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=600",
+    description: "Fresh fruit juice."
+  },
+  {
+    id: 8,
+    name: "Cold Coffee",
+    category: "Drinks",
+    price: 70,
+    image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600",
+    description: "Chilled creamy coffee."
+  }
+];
+
+// ===================================
+// CART STORAGE
+// ===================================
+
+let cart = [];
+
+try {
+  const savedCart = JSON.parse(
+    localStorage.getItem("foodieExpressCart") || "[]"
+  );
+
+  if (Array.isArray(savedCart)) {
+    cart = savedCart.filter(item =>
+      foods.some(food => food.id === item.id) &&
+      Number.isInteger(item.quantity) &&
+      item.quantity > 0 &&
+      item.quantity <= 99
+    );
+  }
+} catch (error) {
+  cart = [];
 }
 
-// ADMIN: CHANGE PRICE
-async function changeFoodPrice(id,oldPrice) {
-  if(!isAdmin) return;
+let activeCategory = "All";
 
-  const value = prompt("Enter new price:",oldPrice);
-  if(value === null) return;
-
-  const price = Number(value);
-
-  if(!Number.isFinite(price) || price <= 0) {
-    alert("Enter a valid price.");
-    return;
-  }
-
-  const {error} = await db
-    .from("products")
-    .update({price})
-    .eq("id",id);
-
-  if(error) {
-    alert(error.message);
-    return;
-  }
-
-  alert("Price updated!");
-  await loadFoods();
-  await loadAdminFoods();
+function saveCart() {
+  localStorage.setItem(
+    "foodieExpressCart",
+    JSON.stringify(cart)
+  );
 }
 
-// ADMIN: AVAILABILITY
-async function toggleFood(id,currentValue) {
-  if(!isAdmin) return;
+// ===================================
+// CATEGORY FILTER
+// ===================================
 
-  const {error} = await db
-    .from("products")
-    .update({available:!currentValue})
-    .eq("id",id);
+function renderCategories() {
 
-  if(error) {
-    alert(error.message);
-    return;
-  }
-
-  await loadFoods();
-  await loadAdminFoods();
-}
-
-// ADMIN: VIEW ORDERS
-async function loadAdminOrders() {
-  if(!isAdmin) return;
-
-  const {data,error} = await db
-    .from("orders")
-    .select("*")
-    .order("created_at",{ascending:false});
-
-  if(error) {
-    el("adminOrders").textContent = error.message;
-    return;
-  }
-
-  const adminStatuses = [
-    "Placed",
-    "Confirmed",
-    "Preparing",
-    "Out for Delivery",
-    "Delivered",
-    "Cancelled"
+  const categories = [
+    "All",
+    ...new Set(foods.map(food => food.category))
   ];
 
-  el("adminOrders").innerHTML = (data || []).map(o => `
-    <div class="order">
-      <b>Order ID: ${safe(o.id)}</b>
-      <p>Customer: ${safe(o.customer_name)}</p>
-      <p>Phone: ${safe(o.phone)}</p>
-      <p>Address: ${safe(o.address)}</p>
-      <p>Total: ${money(o.total)}</p>
-      <p>Payment: ${safe(o.payment_method)}</p>
-      <p>Current Status: <b>${safe(o.status)}</b></p>
-      <select id="status-${o.id}">
-        ${adminStatuses.map(s => `
-          <option value="${s}" ${o.status === s ? "selected" : ""}>${s}</option>
-        `).join("")}
-      </select>
-      <button class="green" onclick="updateOrderStatus('${o.id}')">Update Status</button>
-    </div>
-  `).join("") || "No customer orders yet.";
+  document.getElementById("categories").innerHTML =
+    categories.map(category => `
+      <button
+        class="category-btn ${activeCategory === category ? "active" : ""}"
+        onclick="selectCategory('${category}')">
+        ${category}
+      </button>
+    `).join("");
 }
 
-// ADMIN: UPDATE ORDER STATUS
-async function updateOrderStatus(id) {
-  if(!isAdmin) return;
+function selectCategory(category) {
+  activeCategory = category;
+  renderCategories();
+  renderFoods();
+}
 
-  const status = el("status-" + id).value;
+// ===================================
+// DISPLAY FOOD
+// ===================================
 
-  const {error} = await db
-    .from("orders")
-    .update({status})
-    .eq("id",id);
+function renderFoods() {
 
-  if(error) {
-    alert("Status update failed: " + error.message);
+  const search = document
+    .getElementById("search")
+    .value.toLowerCase()
+    .trim();
+
+  const filtered = foods.filter(food => {
+
+    const matchesCategory =
+      activeCategory === "All" ||
+      food.category === activeCategory;
+
+    const matchesSearch =
+      food.name.toLowerCase().includes(search);
+
+    return matchesCategory && matchesSearch;
+  });
+
+  const grid = document.getElementById("foodGrid");
+
+  if (!filtered.length) {
+    grid.innerHTML = "<p>No food found.</p>";
     return;
   }
 
-  alert("Order status updated!");
-  await loadAdminOrders();
+  grid.innerHTML = filtered.map(food => `
+    <div class="food-card">
+
+      <img
+        src="${food.image}"
+        alt="${food.name}"
+        loading="lazy">
+
+      <div class="food-info">
+
+        <h3>${food.name}</h3>
+
+        <p>${food.description}</p>
+
+        <div class="food-bottom">
+
+          <span class="price">
+            ${CURRENCY}${food.price}
+          </span>
+
+          <button
+            class="add-btn"
+            onclick="addToCart(${food.id})">
+            + Add
+          </button>
+
+        </div>
+      </div>
+    </div>
+  `).join("");
 }
 
-// AUTH STATE
-db.auth.onAuthStateChange((event,session) => {
-  setTimeout(() => {
-    currentUser = session?.user || null;
-    refreshAccount();
-  },0);
-});
+// ===================================
+// ADD TO CART
+// ===================================
 
-// START APP
-async function startApp() {
-  await loadFoods();
-  await refreshAccount();
+function addToCart(id) {
+
+  const existing = cart.find(item => item.id === id);
+
+  if (existing) {
+    if (existing.quantity >= 99) {
+      alert("Maximum quantity reached.");
+      return;
+    }
+    existing.quantity++;
+  } else {
+    cart.push({
+      id: id,
+      quantity: 1
+    });
+  }
+
+  saveCart();
+  renderCart();
 }
 
-startApp();
+// ===================================
+// CHANGE QUANTITY
+// ===================================
+
+function changeQuantity(id, change) {
+
+  const item = cart.find(item => item.id === id);
+
+  if (!item) return;
+
+  item.quantity += change;
+
+  if (item.quantity <= 0) {
+    cart = cart.filter(item => item.id !== id);
+  }
+
+  if (item.quantity > 99) {
+    item.quantity = 99;
+  }
+
+  saveCart();
+  renderCart();
+}
+
+// ===================================
+// RENDER CART
+// ===================================
+
+function renderCart() {
+
+  const cartItems = document.getElementById("cartItems");
+
+  if (!cart.length) {
+    cartItems.innerHTML =
+      '<p class="empty">Your cart is empty.</p>';
+
+    document.getElementById("total").textContent =
+      "Total: ₹0";
+
+    return;
+  }
+
+  let total = 0;
+
+  cartItems.innerHTML = cart.map(item => {
+
+    const food = foods.find(f => f.id === item.id);
+
+    if (!food) return "";
+
+    const subtotal = food.price * item.quantity;
+
+    total += subtotal;
+
+    return `
+      <div class="cart-item">
+
+        <div>
+          <strong>${food.name}</strong>
+          <p class="price">${CURRENCY}${subtotal}</p>
+        </div>
+
+        <div class="qty-controls">
+
+          <button onclick="changeQuantity(${food.id}, -1)">
+            -
+          </button>
+
+          <span>${item.quantity}</span>
+
+          <button onclick="changeQuantity(${food.id}, 1)">
+            +
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+  }).join("");
+
+  document.getElementById("total").textContent =
+    "Total: " + CURRENCY + total;
+}
+
+// ===================================
+// WHATSAPP ORDER
+// ===================================
+
+function sendWhatsAppOrder() {
+
+  const name = document
+    .getElementById("customerName")
+    .value.trim();
+
+  const phone = document
+    .getElementById("customerPhone")
+    .value.trim();
+
+  const address = document
+    .getElementById("customerAddress")
+    .value.trim();
+
+  const instructions = document
+    .getElementById("instructions")
+    .value.trim();
+
+  if (!cart.length) {
+    alert("Please add food to your cart.");
+    return;
+  }
+
+  if (!name || !phone || !address) {
+    alert("Please fill all customer details.");
+    return;
+  }
+
+  if (!/^[0-9+\-\s()]{7,20}$/.test(phone)) {
+    alert("Please enter a valid phone number.");
+    return;
+  }
+
+  if (!/^\d{10,15}$/.test(WHATSAPP_NUMBER)) {
+    alert("Restaurant WhatsApp number is not configured. Please contact the website owner.");
+    return;
+  }
+
+  let total = 0;
+
+  let message =
+    "🍽️ *NEW FOOD ORDER*\n\n";
+
+  message +=
+    "*Customer:* " + name + "\n";
+
+  message +=
+    "*Phone:* " + phone + "\n";
+
+  message +=
+    "*Address:* " + address + "\n\n";
+
+  message += "*ORDER DETAILS*\n";
+
+  cart.forEach(item => {
+
+    const food = foods.find(f => f.id === item.id);
+
+    if (!food) return;
+
+    const subtotal = food.price * item.quantity;
+
+    total += subtotal;
+
+    message +=
+      food.name +
+      " x " + item.quantity +
+      " = ₹" + subtotal + "\n";
+  });
+
+  message += "\n*TOTAL: ₹" + total + "*\n";
+
+  if (instructions) {
+    message +=
+      "\n*Instructions:* " + instructions + "\n";
+  }
+
+  message +=
+    "\nPlease confirm my order.";
+
+  const whatsappURL =
+    "https://wa.me/" +
+    WHATSAPP_NUMBER +
+    "?text=" +
+    encodeURIComponent(message);
+
+  window.open(whatsappURL, "_blank", "noopener");
+
+}
+
+// ===================================
+// INITIALIZE
+// ===================================
+
+renderCategories();
+renderFoods();
+renderCart();
+
 </script>
+
 </body>
 </html>
